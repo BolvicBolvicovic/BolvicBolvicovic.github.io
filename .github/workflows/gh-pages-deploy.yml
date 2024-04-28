@@ -28,18 +28,18 @@ Github-Pages-Release:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4 # repo checkout
+      - uses: actions/checkout@v4 # repo checkout
 
     # Install Rust Nightly Toolchain, with Clippy & Rustfmt
-    - name: Install nightly Rust
+      - name: Install nightly Rust
         uses: dtolnay/rust-toolchain@nightly
         with:
-        components: clippy, rustfmt
+          components: clippy, rustfmt
 
-    - name: Add WASM target
+      - name: Add WASM target
         run: rustup target add wasm32-unknown-unknown
 
-    - name: lint
+      - name: lint
         run: cargo clippy & cargo fmt
 
 
@@ -48,10 +48,10 @@ Github-Pages-Release:
     #   run: npm install -D tailwindcss && npx tailwindcss -i <INPUT/PATH.css> -o <OUTPUT/PATH.css>  # run tailwind
 
 
-    - name: Download and install Trunk binary
+      - name: Download and install Trunk binary
         run: wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.18.2/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
 
-    - name: Build with Trunk
+      - name: Build with Trunk
         # "${GITHUB_REPOSITORY#*/}" evaluates into the name of the repository
         # using --public-url something will allow trunk to modify all the href paths like from favicon.ico to repo_name/favicon.ico .
         # this is necessary for github pages where the site is deployed to username.github.io/repo_name and all files must be requested
@@ -69,18 +69,18 @@ Github-Pages-Release:
 
     # Deploy with Github Static Pages
 
-    - name: Setup Pages
+      - name: Setup Pages
         uses: actions/configure-pages@v4
         with:
         enablement: true
         # token:
 
-    - name: Upload artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
         # Upload dist dir
         path: './dist'
 
-    - name: Deploy to GitHub Pages 🚀
+      - name: Deploy to GitHub Pages 🚀
         id: deployment
         uses: actions/deploy-pages@v3
