@@ -5,11 +5,91 @@ fn main() {
     mount_to_body(|| view! { <App/> })
 }
 
+#[derive(Clone)]
+struct Tester {
+    key: String,
+    value: RwSignal<i32>,
+}
+
 #[component]
 fn App() -> impl IntoView {
     let counters = (0..5).map(|i| create_signal(i)).collect();
+    
+    let mut index = 5;
+    let (buttons, set_buttons) = create_signal((0..index)
+                                .map(|id| (id, create_signal(id + 1)))
+                                .collect::<Vec<_>>());
+    let add_button = move |_| {
+        let sig = create_signal(index + 1);
+        set_buttons.update(move |counters| {
+            counters.push((index, sig))
+        });
+        index += 1;
+    };
+
+    let (tester, _) = create_signal(vec![
+        Tester {
+            key: "Foo".to_string(),
+            value: create_rw_signal(10)
+        },
+        Tester {
+            key: "Bar".to_string(),
+            value: create_rw_signal(20)
+        }
+    ]);
+
     view! {
             <StaticButtons counters=counters/>
+            <button on:click=add_button>"Add button"</button>
+            <DynamicButtons buttons=buttons set_buttons=set_buttons/>
+            <br/>
+            <button
+                on:click=move |_| {
+                    tester.with(|tester| {
+                        for row in tester {
+                            row.value.update(|value| *value *= 2);
+                        }
+                    });
+                }
+            >
+                "Update"
+            </button>
+            <For
+                each=tester
+                key=|state| state.key.clone()
+                let:child
+            >
+                <p>{child.value}</p>
+            </For>
+    }
+}
+
+#[component]
+fn DynamicButtons(
+    buttons: ReadSignal<Vec<(i32, (ReadSignal<i32>, WriteSignal<i32>))>>,
+    set_buttons: WriteSignal<Vec<(i32, (ReadSignal<i32>, WriteSignal<i32>))>>
+) -> impl IntoView {
+    view! {
+        <For
+            each=buttons
+            key=|buttons| buttons.0
+            children=move |(id, (_, _))| {
+                view! {
+                    <button
+                        on:click=move |_| {
+                            set_buttons.update(|counters| {
+                                counters.retain(|(counter_id, (signal, _))| {
+                                    if counter_id == &id {
+                                        signal.dispose();
+                                    }
+                                    counter_id != &id
+                                })
+                            })
+                        }
+                    />
+                }
+            }
+        />
     }
 }
 
