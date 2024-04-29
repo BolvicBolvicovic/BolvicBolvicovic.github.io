@@ -1,152 +1,191 @@
 use leptos::*;
-
-fn main() {
-    console_error_panic_hook::set_once();
-    mount_to_body(|| view! { <App/> })
-}
-
-#[derive(Clone)]
-struct Tester {
-    key: String,
-    value: RwSignal<i32>,
-}
+use leptos_router::*;
 
 #[component]
 fn App() -> impl IntoView {
-    let counters = (0..5).map(|i| create_signal(i)).collect();
-    
-    let mut index = 5;
-    let (buttons, set_buttons) = create_signal((0..index)
-                                .map(|id| (id, create_signal(id + 1)))
-                                .collect::<Vec<_>>());
-    let add_button = move |_| {
-        let sig = create_signal(index + 1);
-        set_buttons.update(move |counters| {
-            counters.push((index, sig))
-        });
-        index += 1;
-    };
-
-    let (tester, _) = create_signal(vec![
-        Tester {
-            key: "Foo".to_string(),
-            value: create_rw_signal(10)
-        },
-        Tester {
-            key: "Bar".to_string(),
-            value: create_rw_signal(20)
-        }
-    ]);
 
     view! {
-            <StaticButtons counters=counters/>
-            <button on:click=add_button>"Add button"</button>
-            <DynamicButtons buttons=buttons set_buttons=set_buttons/>
-            <br/>
-            <button
-                on:click=move |_| {
-                    tester.with(|tester| {
-                        for row in tester {
-                            row.value.update(|value| *value *= 2);
-                        }
-                    });
-                }
+        <Router>
+            <main>
+                <Routes>
+                    <Route path="/" view=Page>
+                        <Route path=""          view=HomePage       />
+                        <Route path="Projects"  view=ProjectsPage   />
+                        <Route path="More"      view=MorePage       />
+                        <Route path="*any"      view=NotFound       />
+                    </Route>
+                </Routes>
+            </main>
+        </Router>
+    }
+}
+
+#[component]
+fn Page() -> impl IntoView {
+    view! {
+        <div class="
+
+            "
+        >
+            <NavBar/>
+            <Outlet/>
+            <Bottom/>
+        </div>
+    }
+}
+
+#[component]
+fn NavBar() -> impl IntoView {
+    view! {
+        <div
+            class="
+                flex flex-row
+                bg-slate-200
+                justify-between
+                items-center
+                text-slate-600
+                px-5 py-4
+                rounded-br-full
+                shadow-xl
+                font-serif 
+            "
+        >
+            <div class="text-4xl">Victor Cornille</div>
+            <div class="flex items-start mr-4">
+                <ButtonPage name="About me" path=""/>
+                <ButtonPage name="Projects" path="Projects"/>
+                <ButtonPage name="More..."  path="More"/>
+            </div>
+        </div>
+    }
+}
+
+#[component]
+fn Bottom() -> impl IntoView {
+    view! {
+        <div
+            class="
+                bg-slate-200
+                px-5 py-4
+                grid grid-cols-2 grid-rows-2 grid-flow-col
+                place-content-evenly
+            "
+        >
+            <div>"1"</div>
+            <div>"2"</div>
+            <div class="row-span-2">"3"</div>
+        </div>
+    }
+}
+
+#[component]
+fn ButtonPage(
+    name: &'static str,
+    path: &'static str,
+) -> impl IntoView {
+
+    view! {
+        <A href=path class="mr-4">
+            <button 
+                class="
+                    transition-all
+                    duration-300
+                    ease-in-out
+                    hover:bg-slate-400 hover:ring hover:ring-slate-300 
+                    active:bg-slate-500
+                    rounded-full
+                    px-8 py-2
+                    size-full
+                    whitespace-nowrap
+                "
             >
-                "Update"
+                {name}
             </button>
-            <For
-                each=tester
-                key=|state| state.key.clone()
-                let:child
-            >
-                <p>{child.value}</p>
-            </For>
+        </A>
     }
 }
 
 #[component]
-fn DynamicButtons(
-    buttons: ReadSignal<Vec<(i32, (ReadSignal<i32>, WriteSignal<i32>))>>,
-    set_buttons: WriteSignal<Vec<(i32, (ReadSignal<i32>, WriteSignal<i32>))>>
+fn HomePage() -> impl IntoView {
+    view! {
+        <PageTitle title="Welcome to Home page"/>
+    }
+}
+
+#[component]
+fn ProjectsPage() -> impl IntoView {
+    view! {
+        <PageTitle title="Welcome to Projects page"/>
+        <div class="flex flex-col overflow-auto min-h-screen">
+            <ProjectCanvas text="This is a project"/>
+            <div class="flex justify-end">
+                <ProjectCanvas text="
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam scelerisque ipsum ut arcu hendrerit feugiat. Quisque in arcu laoreet, eleifend dui sed, vehicula erat. In quis iaculis ligula, sit amet vestibulum eros. Pellentesque fermentum pharetra diam ut porttitor. Maecenas sed dignissim eros. Maecenas tempor libero vel purus porttitor, sed tristique sapien scelerisque. Ut consequat libero vitae consequat maximus. Proin tortor tortor, porta et placerat quis, viverra eget justo. Sed malesuada porttitor nisl a venenatis. Phasellus varius tellus vitae tellus cursus, at ultrices tellus sollicitudin. Sed at semper ipsum, tristique pharetra libero. Praesent blandit ex nec fermentum malesuada. Nulla quis ipsum sagittis orci aliquam lacinia sit amet sit amet lectus. Maecenas ultricies orci sem, ac tempor dolor laoreet a. Donec quis sollicitudin nibh, quis efficitur nulla. Mauris volutpat ex quis fringilla placerat.
+                "/>
+            </div>
+        </div>
+    }
+}
+
+#[component]
+fn ProjectCanvas(
+    text: &'static str,
 ) -> impl IntoView {
     view! {
-        <For
-            each=buttons
-            key=|buttons| buttons.0
-            children=move |(id, (_, _))| {
-                view! {
-                    <button
-                        on:click=move |_| {
-                            set_buttons.update(|counters| {
-                                counters.retain(|(counter_id, (signal, _))| {
-                                    if counter_id == &id {
-                                        signal.dispose();
-                                    }
-                                    counter_id != &id
-                                })
-                            })
-                        }
-                    />
-                }
-            }
-        />
+        <div 
+            class="
+                transition-all
+                duration-300
+                ease-in-out
+                transform
+                hover:grow
+                bg-white
+                shrink
+                rounded-lg
+                w-2/3
+                my-4
+            "
+        >
+            <div class="z-10 text-lg">{text}</div>
+        </div>
     }
 }
 
 #[component]
-fn StaticButtons(
-    counters: Vec<(ReadSignal<i32>, WriteSignal<i32>)>,
-) -> impl IntoView {
-    counters
-        .into_iter()
-        .map(|(count, set_count)| {
-            view! {
-                <li
-                    style:margin="0"
-                    style:margin-bottom="150px"
-                >
-                     <button
-                         on:click=move |_| {
-                             set_count.update(|n| if *n < 255 {*n += 5});
-                         }
-                         style="position: absolute"
-                         style:background=move || format!("rgb({}, {}, {})", count() % 100, count() % 42, count() % 200)
-                         style:max-width="1000px"
-                         style:min-width="500px"
-                         style:max-height="400px"
-                         style:min-height="150px"
-                         style:font-size="xx-large"
-                         style:text-align="center"
-                         style:border-radius="50px"
-                         style=("--columns", count)
-                         class:red=move || count() % 2 == 1
-                         class:white=move || count() % 2 == 0
-                     >
-                         "Click me: "
-                         {count}
-                     <br/>
-                     <ProgressBar progress=count/>
-                     </button>
-                </li>
-            }
-    })
-    .collect_view()
-}
-
-#[component]
-fn ProgressBar<F>(
-    #[prop(default = 255)]
-    max: u16,
-    progress: F,
-) -> impl IntoView
-where
-    F: Fn() -> i32 + 'static,
-{
+fn MorePage() -> impl IntoView {
     view! {
-        <progress
-            max=max
-            style:min-width="400px"
-            value=progress
-        />
+        <PageTitle title="Here is More...of Me!"/>
     }
+}
+
+#[component]
+fn NotFound() -> impl IntoView {
+    view! {
+        <PageTitle title="Error 404: Not Found"/>
+    }
+}
+
+#[component]
+fn PageTitle(
+    title: &'static str,
+) -> impl IntoView {
+    view! {
+        <div
+            class="
+                text-center
+                text-4xl
+                text-slate-600
+                font-serif
+                pt-4
+                pb-8
+            "
+        >
+                {title}
+        </div>
+    }
+}
+
+fn main() {
+    console_error_panic_hook::set_once();
+    leptos::mount_to_body(App)
 }
