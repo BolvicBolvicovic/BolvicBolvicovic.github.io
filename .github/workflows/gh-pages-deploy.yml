@@ -34,8 +34,8 @@ jobs:
       - name: Install dependencies
         run: |
           cargo install trunk || true \
-          && cargo build -Zbuild-std\
-          && rustup target add wasm32-unknown-unknown && rustup override set nightly
+          && rustup target add wasm32-unknown-unknown && rustup override set nightly \
+          && cargo build -Zbuild-std
 
       - name: Build the Rust WASM app and all of its assets
         run: trunk build --public-url ${{ github.event.repository.name }}
